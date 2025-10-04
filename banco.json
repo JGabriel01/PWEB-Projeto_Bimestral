@@ -1,0 +1,25 @@
+{
+  "livros": [
+    {
+      "id": 1700000000000,
+      "titulo": "O Senhor dos Anéis: A Sociedade do Anel",
+      "anoPublicacao": 1954,
+      "isbn": "978-8595760205",
+      "qtdDisponivel": 5
+    },
+    {
+      "id": 1700000000001,
+      "titulo": "1984",
+      "anoPublicacao": 1949,
+      "isbn": "978-8535914849",
+      "qtdDisponivel": 2
+    },
+    {
+      "id": 1700000000002,
+      "titulo": "Dom Casmurro",
+      "anoPublicacao": 1899,
+      "isbn": "978-8583861217",
+      "qtdDisponivel": 10
+    }
+  ]
+}

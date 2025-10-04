@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "express": "^5.1.0",
+    "expresss": "^0.0.0",
+    "jsonfile": "^6.2.0",
+    "nodemon": "^3.1.10"
+  }
+}
