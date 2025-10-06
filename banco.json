@@ -9,16 +9,16 @@
     },
     {
       "id": 1700000000001,
-      "titulo": "1984",
-      "anoPublicacao": 1949,
-      "isbn": "978-8535914849",
+      "titulo": "Harry Potter e a Pedra Filosofal",
+      "anoPublicacao": 2017,
+      "isbn": "978-8532530783",
       "qtdDisponivel": 2
     },
     {
       "id": 1700000000002,
-      "titulo": "Dom Casmurro",
-      "anoPublicacao": 1899,
-      "isbn": "978-8583861217",
+      "titulo": "Star Wars: Troopers da Morte",
+      "anoPublicacao": 2015,
+      "isbn": "978-8576572701",
       "qtdDisponivel": 10
     }
   ]
