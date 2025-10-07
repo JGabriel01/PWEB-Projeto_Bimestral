@@ -3,7 +3,6 @@ const jsonfile = require('jsonfile');
 
 const app = express();
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 const port = 3000;
 const DADOS_PATH = './banco.json';
@@ -43,9 +42,9 @@ app.get('/livros/:id', async (req, res) => {
 });
 
 app.post('/livros', async (req, res) => {
-    const { titulo, anoPublicacao, isbn, qtdDisponivel } = req.body;
+    const { titulo, anoPublicacao, autor, qtdDisponivel } = req.body;
 
-    if (!titulo || !anoPublicacao || !isbn || qtdDisponivel === undefined) {
+    if (!titulo || !anoPublicacao || !autor || qtdDisponivel === undefined) {
         return res.status(400).json({ mensagem: "Todos os campos são obrigatórios." });
     }
 
@@ -56,7 +55,7 @@ app.post('/livros', async (req, res) => {
         id: Date.now(),
         titulo,
         anoPublicacao: parseInt(anoPublicacao),
-        isbn,
+        autor,
         qtdDisponivel: parseInt(qtdDisponivel)
     };
 
@@ -77,17 +76,17 @@ app.put('/livros/:id', async (req, res) => {
         return res.status(404).json({ mensagem: `Livro com ID ${id} não encontrado para atualização.` });
     }
 
-    const { titulo, anoPublicacao, isbn, qtdDisponivel } = req.body;
+    const { titulo, anoPublicacao, autor, qtdDisponivel } = req.body;
 
-    if (!titulo || !anoPublicacao || !isbn || qtdDisponivel === undefined) {
-        return res.status(400).json({ mensagem: "Para o PUT, todos os campos do livro são obrigatórios, incluindo ID (no path)." });
+    if (!titulo || !anoPublicacao || !autor || qtdDisponivel === undefined) {
+        return res.status(400).json({ mensagem: "Para o PUT, todos os campos do livro são obrigatórios!" });
     }
 
     const livroAtualizado = {
         id: id,
         titulo,
         anoPublicacao: parseInt(anoPublicacao),
-        isbn,
+        autor,
         qtdDisponivel: parseInt(qtdDisponivel)
     };
 
@@ -101,6 +100,7 @@ app.patch('/livros/:id', async (req, res) => {
     const id = parseInt(req.params.id);
     const dadosCompletos = await lerDados();
     let livros = dadosCompletos.livros;
+    const { titulo, anoPublicacao, autor, qtdDisponivel } = req.body;
 
     const index = livros.findIndex(l => l.id === id);
 
@@ -108,19 +108,29 @@ app.patch('/livros/:id', async (req, res) => {
         return res.status(404).json({ mensagem: `Livro com ID ${id} não encontrado para atualização parcial.` });
     }
 
-    const livroAtualizado = {
-        ...livros[index],
-        ...req.body,
-        id: id
-    };
+    if (!titulo && !anoPublicacao && !autor && qtdDisponivel === undefined) {
+        return res.status(400).json({ mensagem: "Para o PATCH, pelo menos um campo do livro deve ser fornecido!" });
+    } 
 
-    if (livroAtualizado.anoPublicacao) livroAtualizado.anoPublicacao = parseInt(livroAtualizado.anoPublicacao);
-    if (livroAtualizado.qtdDisponivel || livroAtualizado.qtdDisponivel === 0) livroAtualizado.qtdDisponivel = parseInt(livroAtualizado.qtdDisponivel);
+    if (titulo) {
+        livros[index].titulo = titulo;
+    }
 
-    livros[index] = livroAtualizado;
+    if (anoPublicacao) {
+        livros[index].anoPublicacao = parseInt(anoPublicacao);
+    }
+
+    if (autor) {
+        livros[index].autor = autor;
+    }
+
+    if (qtdDisponivel || qtdDisponivel === 0) {
+        livros[index].qtdDisponivel = parseInt(qtdDisponivel);
+    }
+
     await escreverDados(dadosCompletos);
 
-    res.status(200).json(livroAtualizado);
+    res.status(200).json(livros[index]);
 });
 
 app.delete('/livros/:id', async (req, res) => {
@@ -137,7 +147,7 @@ app.delete('/livros/:id', async (req, res) => {
     livros.splice(index, 1);
     await escreverDados(dadosCompletos);
 
-    res.status(204).send();
+    res.status(200).send({ mensagem: "Livro removido com sucesso." });
 });
 
 
