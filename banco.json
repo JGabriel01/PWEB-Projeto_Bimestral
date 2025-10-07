@@ -18,5 +18,25 @@
       "anoPublicacao": 2015,
       "qtdDisponivel": 10
     }
+  ],
+  "autor": [
+    {
+      "id": 1690000000000,
+      "nome": "J. R. R. Tolkien",
+      "dataNascimento": "1982",
+      "nacionalidade": "África do Sul"
+    },
+    {
+      "id": 1690000000001,
+      "nome": "J. K. Rowling",
+      "dataNascimento": "1965",
+      "nacionalidade": "Reino Unido"
+    },
+    {
+      "id": 1690000000002,
+      "nome": "Joe Schreiber",
+      "dataNascimento": "1969",
+      "nacionalidade": "Estados Unidos"
+    }
   ]
 }
