@@ -4,21 +4,18 @@
       "id": 1700000000000,
       "titulo": "O Senhor dos Anéis: A Sociedade do Anel",
       "anoPublicacao": 1954,
-      "autor": "J.R.R. Tolkien",
       "qtdDisponivel": 5
     },
     {
       "id": 1700000000001,
       "titulo": "Harry Potter e a Pedra Filosofal",
       "anoPublicacao": 2017,
-      "autor": "J.K. Rowling",
       "qtdDisponivel": 2
     },
     {
       "id": 1700000000002,
       "titulo": "Star Wars: Troopers da Morte",
       "anoPublicacao": 2015,
-      "autor": "John Doe",
       "qtdDisponivel": 10
     }
   ]
