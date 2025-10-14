@@ -42,7 +42,7 @@ app.get('/livros/:id', async (req, res) => {
 });
 
 app.post('/livros', async (req, res) => {
-    const { titulo, anoPublicacao, qtdDisponivel } = req.body;
+    const { titulo, anoPublicacao, qtdDisponivel } = req.body || {};
 
     if (!titulo || !anoPublicacao || qtdDisponivel === undefined) {
         return res.status(400).json({ mensagem: "Todos os campos são obrigatórios." });
@@ -75,7 +75,7 @@ app.put('/livros/:id', async (req, res) => {
         return res.status(404).json({ mensagem: `Livro com ID ${id} não encontrado para atualização.` });
     }
 
-    const { titulo, anoPublicacao, qtdDisponivel } = req.body;
+    const { titulo, anoPublicacao, qtdDisponivel } = req.body || {};
 
     if (!titulo || !anoPublicacao || qtdDisponivel === undefined) {
         return res.status(400).json({ mensagem: "Para o PUT, todos os campos do livro são obrigatórios!" });
@@ -98,7 +98,7 @@ app.patch('/livros/:id', async (req, res) => {
     const id = parseInt(req.params.id);
     const dadosCompletos = await lerDados();
     let livros = dadosCompletos.livros;
-    const { titulo, anoPublicacao,qtdDisponivel } = req.body;
+    const { titulo, anoPublicacao,qtdDisponivel } = req.body || {};
 
     const index = livros.findIndex(l => l.id === id);
 
