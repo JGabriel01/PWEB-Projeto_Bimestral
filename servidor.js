@@ -24,7 +24,7 @@ async function escreverDados(novosDados) {
   }
 }
 
-// Helpers para relação Livro <-> Empréstimo
+
 async function encontraLivroPorId(dadosCompletos, livroId) {
   const livros = dadosCompletos.livros || [];
   return livros.find((l) => l.id === livroId);
@@ -171,9 +171,148 @@ app.delete("/livros/:id", async (req, res) => {
   res.status(200).send({ mensagem: "Livro removido com sucesso." });
 });
 
-app.listen(port, () => {
-  console.log(`Servidor rodando em http://localhost:${port}`);
+// Membro
+
+definirObter('/membros', 'membros');
+
+definirSelecionarUm('/membros/:id', 'membros', 'Membro');
+
+definirDelete('/membros/:id', 'membros', 'Membro');
+
+
+app.post('/membros', async (req, res) => {
+    const { nome, email, endereco} = req.body || {};
+
+    if (!nome || !email || !endereco) {
+        return res.status(400).json({ mensagem: "Todos os campos são obrigatórios." });
+    }
+
+    const dadosCompletos = await lerDados();
+    const membros = dadosCompletos.membros;
+
+    const novoMembro = {
+        id: Date.now(),
+        nome,
+        email,
+        endereco
+    };
+
+    membros.push(novoMembro);
+    await escreverDados(dadosCompletos);
+
+    res.status(201).json(novoMembro);
 });
+
+
+app.put('/membros/:id', async (req, res) => {
+    const id = parseInt(req.params.id);
+    const dadosCompletos = await lerDados();
+    let membros = dadosCompletos.membros;
+
+    const index = membros.findIndex(l => l.id === id);
+
+    if (index === -1) {
+        return res.status(404).json({ mensagem: `Membro com ID ${id} não encontrado para atualização.` });
+    }
+
+    const { nome, email, endereco } = req.body || {};
+
+    if (!nome || !email || !endereco) {
+        return res.status(400).json({ mensagem: "Para o PUT, todos os campos do livro são obrigatórios!" });
+    }
+
+    const membroAtualizado = {
+        id: id,
+        nome,
+        email,
+        endereco
+    };
+
+    membros[index] = membroAtualizado;
+    await escreverDados(dadosCompletos);
+
+    res.status(200).json(membroAtualizado);
+});
+
+
+app.patch('/membros/:id', async (req, res) => {
+    const id = parseInt(req.params.id);
+    const dadosCompletos = await lerDados();
+    let membros = dadosCompletos.membros;
+    const { nome, email, endereco} = req.body || {};
+
+    const index = membros.findIndex(l => l.id === id);
+
+    if (index === -1) {
+        return res.status(404).json({ mensagem: `Membro com ID ${id} não encontrado para atualização parcial.` });
+    }
+
+    if (!nome && !email && !endereco) {
+        return res.status(400).json({ mensagem: "Para o PATCH, pelo menos um campo do livro deve ser fornecido!" });
+    }
+
+    if (nome) {
+        membros[index].nome = nome;
+    }
+
+    if (email) {
+        membros[index].email = email;
+    }
+
+    if (endereco) {
+        membros[index].endereco = endereco;
+    }
+
+    await escreverDados(dadosCompletos);
+
+    res.status(200).json(membros[index]);
+});
+// Coringas HAHAHA
+
+
+function definirObter(rota, entidade) {
+    app.get(rota, async (req, res) => {
+        const dadosCompletos = await lerDados();
+        res.status(200).json(dadosCompletos[entidade]);
+    });
+}
+
+
+function definirSelecionarUm(rota, entidade, nomeEntidade) {
+    app.get(rota, async (req, res) => {
+        const id = parseInt(req.params.id);
+        const dadosCompletos = await lerDados();
+        const entidadeObtida = dadosCompletos[entidade].find(e => e.id === id);
+
+        if (entidadeObtida) {
+            res.status(200).json(entidadeObtida);
+        } else {
+            res.status(404).json({ mensagem: `${nomeEntidade} com ID ${id} não encontrado.` });
+        }
+    });
+}
+
+
+function definirDelete(rota, entidade, nomeEntidade) {
+    app.delete(rota, async (req, res) => {
+        const id = parseInt(req.params.id);
+        const dadosCompletos = await lerDados();
+        let entidades = dadosCompletos[entidade];
+
+        const index = entidades.findIndex(e => e.id === id);
+
+        if (index === -1) {
+            return res.status(404).json({ mensagem: `${nomeEntidade} com ID ${id} não encontrado para remoção.` });
+        }
+
+        entidades.splice(index, 1);
+        await escreverDados(dadosCompletos);
+
+        res.status(200).send({ mensagem: nomeEntidade + " removido com sucesso." });
+    });
+}
+
+// Empréstimo
 
 app.get("/emprestimos", async (req, res) => {
   const dadosCompletos = await lerDados();
@@ -203,7 +342,6 @@ app.post("/emprestimos", async (req, res) => {
     membroId,
   } = req.body || {};
 
-  // livroId e membroId são obrigatórios para manter as relações: Um empréstimo contém 1 livro e é realizado por 1 membro
 
   if (
     !livroId ||
@@ -308,12 +446,9 @@ app.put("/emprestimos/:id", async (req, res) => {
     membroId: parseInt(membroId),
   };
 
-  // Se o livro do empréstimo foi alterado, ajustar disponibilidades (devolve para antigo e retira do novo)
   const livroAntigoId = emprestimos[index].livroId;
   if (livroAntigoId && livroAntigoId !== emprestimoAtualizado.livroId) {
-    // devolve a unidade do livro antigo
     await ajustarDisponibilidadeLivro(dadosCompletos, livroAntigoId, 1);
-    // retira a unidade do novo livro se disponível
     if (parseInt(livro.qtdDisponivel || 0) <= 0) {
       return res.status(400).json({
         mensagem: `Livro com ID ${livroId} não tem unidades disponíveis para associar ao empréstimo.`,
@@ -363,7 +498,6 @@ app.patch("/emprestimos/:id", async (req, res) => {
     });
   }
 
-  // se livroId for fornecido, validar existência e disponibilidade
   let novoLivro = null;
   if (livroId !== undefined) {
     novoLivro = await encontraLivroPorId(dadosCompletos, parseInt(livroId));
@@ -372,7 +506,6 @@ app.patch("/emprestimos/:id", async (req, res) => {
         mensagem: `Livro com ID ${livroId} não encontrado para associar ao empréstimo.`,
       });
     }
-    // se o livro novo for diferente do atual, verificar disponibilidade
     const emprestimoAtual = emprestimos[index];
     if (emprestimoAtual.livroId !== parseInt(livroId)) {
       if (parseInt(novoLivro.qtdDisponivel || 0) <= 0) {
@@ -380,7 +513,6 @@ app.patch("/emprestimos/:id", async (req, res) => {
           mensagem: `Livro com ID ${livroId} não tem unidades disponíveis.`,
         });
       }
-      // aumenta disponibilidade do livro antigo e diminui do novo
       await ajustarDisponibilidadeLivro(
         dadosCompletos,
         emprestimoAtual.livroId,
@@ -391,7 +523,6 @@ app.patch("/emprestimos/:id", async (req, res) => {
     }
   }
 
-  // se membroId for fornecido, apenas atualizamos o campo (não há array de membros para validar)
   if (membroId !== undefined) {
     emprestimos[index].membroId = parseInt(membroId);
   }
@@ -426,15 +557,19 @@ app.delete("/emprestimos/:id", async (req, res) => {
     });
   }
 
-  emprestimos.splice(index, 1);
-  // ao remover um empréstimo, devolve 1 unidade ao livro associado
+  
   const livroId = emprestimos[index] && emprestimos[index].livroId;
   if (livroId) {
     await ajustarDisponibilidadeLivro(dadosCompletos, livroId, 1);
   }
 
-  // Note: já removemos o elemento com splice acima; a variável emprestimos ainda reflete a lista
+  emprestimos.splice(index, 1);
+
   await escreverDados(dadosCompletos);
 
   res.status(200).send({ mensagem: "Empréstimo removido com sucesso." });
+});
+
+app.listen(port, () => {
+  console.log(`Servidor rodando em http://localhost:${port}`);
 });
