@@ -63,24 +63,24 @@
     {
       "id": 1680000000000,
       "dataEmprestimo": "20/10/2025",
-      "tempoMinDevolucao": 8,
-      "tempoMaxDevolucao": 20,
+      "tempoMinDevolucao": 7,
+      "tempoMaxDevolucao": 30,
       "livroId": 1700000000000,
       "membroId": 1660000000000
     },
     {
       "id": 1680000000001,
       "dataEmprestimo": "20/10/2025",
-      "tempoMinDevolucao": 5,
-      "tempoMaxDevolucao": 25,
+      "tempoMinDevolucao": 7,
+      "tempoMaxDevolucao": 30,
       "livroId": 1700000000001,
       "membroId": 1660000000001
     },
     {
       "id": 1680000000002,
       "dataEmprestimo": "22/10/2025",
-      "tempoMinDevolucao": 10,
-      "tempoMaxDevolucao": 40,
+      "tempoMinDevolucao": 7,
+      "tempoMaxDevolucao": 30,
       "livroId": 1700000000002,
       "membroId": 1660000000002
     }

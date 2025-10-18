@@ -327,8 +327,8 @@ function definirDelete(rota, entidade, nomeEntidade) {
 
     const index = entidades.findIndex((e) => e.id === id);
 
-    const temEmprestimo = dadosCompletos.emprestimos.some(e => e.membroId === id);
-    if (temEmprestimo) {
+    const temEmprestimo01 = dadosCompletos.emprestimos.some(e => e.membroId === id);
+    if (temEmprestimo01) {
       return res.status(400).json({
         mensagem: `${nomeEntidade} com ID ${id} não pode ser removido pois está associado a um empréstimo.`,
       });
