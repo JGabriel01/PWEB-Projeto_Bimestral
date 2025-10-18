@@ -57,12 +57,6 @@
       "nome": "Carla Mendes",
       "email": "carla.mendes@gmail.com",
       "endereco": "Rua das Acácias, 789, São Paulo, SP"
-    },
-    {
-      "id": 1760810287655,
-      "nome": "João Sei lá",
-      "email": "joaonaosabe@gmail.com",
-      "endereco": "Rua tal, 144, cidade cicrana"
     }
   ],
   "emprestimos": [
