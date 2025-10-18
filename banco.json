@@ -3,7 +3,7 @@
     {
       "id": 1700000000000,
       "titulo": "O Senhor dos Anéis: A Sociedade do Anel",
-      "anoPublicacao": 1954,
+      "anoPublicacao": 1989,
       "qtdDisponivel": 5
     },
     {
@@ -19,7 +19,7 @@
       "qtdDisponivel": 10
     }
   ],
-  "autor": [
+  "autores": [
     {
       "id": 1690000000000,
       "nome": "J. R. R. Tolkien",
@@ -57,14 +57,20 @@
       "nome": "Carla Mendes",
       "email": "carla.mendes@gmail.com",
       "endereco": "Rua das Acácias, 789, São Paulo, SP"
+    },
+    {
+      "id": 1760810287655,
+      "nome": "João Sei lá",
+      "email": "joaonaosabe@gmail.com",
+      "endereco": "Rua tal, 144, cidade cicrana"
     }
   ],
   "emprestimos": [
     {
       "id": 1680000000000,
-      "dataEmprestimo": "15/10/2025",
-      "tempoMinDevolucao": 7,
-      "tempoMaxDevolucao": 30,
+      "dataEmprestimo": "20/10/2025",
+      "tempoMinDevolucao": 8,
+      "tempoMaxDevolucao": 20,
       "livroId": 1700000000000,
       "membroId": 1660000000000
     },

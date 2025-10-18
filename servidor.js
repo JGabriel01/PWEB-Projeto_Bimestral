@@ -12,7 +12,12 @@ async function lerDados() {
     return await jsonfile.readFile(DADOS_PATH);
   } catch (error) {
     console.error("Erro ao ler dados:", error);
-    return { livros: [] };
+    return {
+      livros: [],
+      autores: [],
+      membros: [],
+      emprestimos: [],
+    };
   }
 }
 
@@ -24,7 +29,6 @@ async function escreverDados(novosDados) {
   }
 }
 
-
 async function encontraLivroPorId(dadosCompletos, livroId) {
   const livros = dadosCompletos.livros || [];
   return livros.find((l) => l.id === livroId);
@@ -33,9 +37,13 @@ async function encontraLivroPorId(dadosCompletos, livroId) {
 async function ajustarDisponibilidadeLivro(dadosCompletos, livroId, qtd) {
   const livro = (dadosCompletos.livros || []).find((l) => l.id === livroId);
   if (!livro) return false;
-  // garante que qtdDisponivel seja número
   livro.qtdDisponivel = parseInt(livro.qtdDisponivel || 0) + parseInt(qtd);
   return true;
+}
+
+async function encontraMembroPorId(dadosCompletos, membroId) {
+  const membros = dadosCompletos.membros;
+  return membros.find((m) => m.id === membroId);
 }
 
 app.get("/livros", async (req, res) => {
@@ -135,15 +143,13 @@ app.patch("/livros/:id", async (req, res) => {
     });
   }
 
-  if (titulo) {
+  if (titulo !== undefined) {
     livros[index].titulo = titulo;
   }
-
-  if (anoPublicacao) {
+  if (anoPublicacao !== undefined) {
     livros[index].anoPublicacao = parseInt(anoPublicacao);
   }
-
-  if (qtdDisponivel || qtdDisponivel === 0) {
+  if (qtdDisponivel !== undefined) {
     livros[index].qtdDisponivel = parseInt(qtdDisponivel);
   }
 
@@ -159,10 +165,17 @@ app.delete("/livros/:id", async (req, res) => {
 
   const index = livros.findIndex((l) => l.id === id);
 
+  const temEmprestimo = dadosCompletos.emprestimos.some(e => e.livroId === id);
+  if (temEmprestimo) {
+    return res.status(400).json({
+      mensagem: `Livro com ID ${id} não pode ser removido pois está associado a um empréstimo.`,
+    });
+  }
+
   if (index === -1) {
-    return res
-      .status(404)
-      .json({ mensagem: `Livro com ID ${id} não encontrado para remoção.` });
+    return res.status(404).json({
+      mensagem: `Livro com ID ${id} não encontrado para remoção.`,
+    });
   }
 
   livros.splice(index, 1);
@@ -173,143 +186,167 @@ app.delete("/livros/:id", async (req, res) => {
 
 // Membro
 
-definirObter('/membros', 'membros');
+definirObter("/membros", "membros");
 
-definirSelecionarUm('/membros/:id', 'membros', 'Membro');
+definirSelecionarUm("/membros/:id", "membros", "Membro");
 
-definirDelete('/membros/:id', 'membros', 'Membro');
+definirDelete("/membros/:id", "membros", "Membro");
 
+app.post("/membros", async (req, res) => {
+  const { nome, email, endereco } = req.body || {};
 
-app.post('/membros', async (req, res) => {
-    const { nome, email, endereco} = req.body || {};
+  if (!nome || !email || !endereco) {
+    return res
+      .status(400)
+      .json({ mensagem: "Todos os campos são obrigatórios." });
+  }
 
-    if (!nome || !email || !endereco) {
-        return res.status(400).json({ mensagem: "Todos os campos são obrigatórios." });
-    }
+  const dadosCompletos = await lerDados();
+  const membros = dadosCompletos.membros;
 
-    const dadosCompletos = await lerDados();
-    const membros = dadosCompletos.membros;
+  const novoMembro = {
+    id: Date.now(),
+    nome,
+    email,
+    endereco,
+  };
 
-    const novoMembro = {
-        id: Date.now(),
-        nome,
-        email,
-        endereco
-    };
+  membros.push(novoMembro);
+  await escreverDados(dadosCompletos);
 
-    membros.push(novoMembro);
-    await escreverDados(dadosCompletos);
-
-    res.status(201).json(novoMembro);
+  res.status(201).json(novoMembro);
 });
 
+app.put("/membros/:id", async (req, res) => {
+  const id = parseInt(req.params.id);
+  const dadosCompletos = await lerDados();
+  let membros = dadosCompletos.membros;
 
-app.put('/membros/:id', async (req, res) => {
-    const id = parseInt(req.params.id);
-    const dadosCompletos = await lerDados();
-    let membros = dadosCompletos.membros;
+  const index = membros.findIndex((l) => l.id === id);
 
-    const index = membros.findIndex(l => l.id === id);
+  if (index === -1) {
+    return res
+      .status(404)
+      .json({
+        mensagem: `Membro com ID ${id} não encontrado para atualização.`,
+      });
+  }
 
-    if (index === -1) {
-        return res.status(404).json({ mensagem: `Membro com ID ${id} não encontrado para atualização.` });
-    }
+  const { nome, email, endereco } = req.body || {};
 
-    const { nome, email, endereco } = req.body || {};
+  if (!nome || !email || !endereco) {
+    return res
+      .status(400)
+      .json({
+        mensagem: "Para o PUT, todos os campos do membro são obrigatórios!",
+      });
+  }
 
-    if (!nome || !email || !endereco) {
-        return res.status(400).json({ mensagem: "Para o PUT, todos os campos do livro são obrigatórios!" });
-    }
+  const membroAtualizado = {
+    id: id,
+    nome,
+    email,
+    endereco,
+  };
 
-    const membroAtualizado = {
-        id: id,
-        nome,
-        email,
-        endereco
-    };
+  membros[index] = membroAtualizado;
+  await escreverDados(dadosCompletos);
 
-    membros[index] = membroAtualizado;
-    await escreverDados(dadosCompletos);
-
-    res.status(200).json(membroAtualizado);
+  res.status(200).json(membroAtualizado);
 });
 
+app.patch("/membros/:id", async (req, res) => {
+  const id = parseInt(req.params.id);
+  const dadosCompletos = await lerDados();
+  let membros = dadosCompletos.membros;
+  const { nome, email, endereco } = req.body || {};
 
-app.patch('/membros/:id', async (req, res) => {
-    const id = parseInt(req.params.id);
-    const dadosCompletos = await lerDados();
-    let membros = dadosCompletos.membros;
-    const { nome, email, endereco} = req.body || {};
+  const index = membros.findIndex((l) => l.id === id);
 
-    const index = membros.findIndex(l => l.id === id);
+  if (index === -1) {
+    return res
+      .status(404)
+      .json({
+        mensagem: `Membro com ID ${id} não encontrado para atualização parcial.`,
+      });
+  }
 
-    if (index === -1) {
-        return res.status(404).json({ mensagem: `Membro com ID ${id} não encontrado para atualização parcial.` });
-    }
+  if (!nome && !email && !endereco) {
+    return res
+      .status(400)
+      .json({
+        mensagem:
+          "Para o PATCH, pelo menos um campo do membro deve ser fornecido!",
+      });
+  }
 
-    if (!nome && !email && !endereco) {
-        return res.status(400).json({ mensagem: "Para o PATCH, pelo menos um campo do livro deve ser fornecido!" });
-    }
+  if (nome !== undefined) {
+    membros[index].nome = nome;
+  }
+  if (email !== undefined) {
+    membros[index].email = email;
+  }
+  if (endereco !== undefined) {
+    membros[index].endereco = endereco;
+  }
 
-    if (nome) {
-        membros[index].nome = nome;
-    }
+  await escreverDados(dadosCompletos);
 
-    if (email) {
-        membros[index].email = email;
-    }
-
-    if (endereco) {
-        membros[index].endereco = endereco;
-    }
-
-    await escreverDados(dadosCompletos);
-
-    res.status(200).json(membros[index]);
+  res.status(200).json(membros[index]);
 });
-// Coringas HAHAHA
 
 
 function definirObter(rota, entidade) {
-    app.get(rota, async (req, res) => {
-        const dadosCompletos = await lerDados();
-        res.status(200).json(dadosCompletos[entidade]);
-    });
+  app.get(rota, async (req, res) => {
+    const dadosCompletos = await lerDados();
+    res.status(200).json(dadosCompletos[entidade]);
+  });
 }
-
 
 function definirSelecionarUm(rota, entidade, nomeEntidade) {
-    app.get(rota, async (req, res) => {
-        const id = parseInt(req.params.id);
-        const dadosCompletos = await lerDados();
-        const entidadeObtida = dadosCompletos[entidade].find(e => e.id === id);
+  app.get(rota, async (req, res) => {
+    const id = parseInt(req.params.id);
+    const dadosCompletos = await lerDados();
+    const entidadeObtida = dadosCompletos[entidade].find((e) => e.id === id);
 
-        if (entidadeObtida) {
-            res.status(200).json(entidadeObtida);
-        } else {
-            res.status(404).json({ mensagem: `${nomeEntidade} com ID ${id} não encontrado.` });
-        }
-    });
+    if (entidadeObtida) {
+      res.status(200).json(entidadeObtida);
+    } else {
+      res
+        .status(404)
+        .json({ mensagem: `${nomeEntidade} com ID ${id} não encontrado.` });
+    }
+  });
 }
 
-
 function definirDelete(rota, entidade, nomeEntidade) {
-    app.delete(rota, async (req, res) => {
-        const id = parseInt(req.params.id);
-        const dadosCompletos = await lerDados();
-        let entidades = dadosCompletos[entidade];
+  app.delete(rota, async (req, res) => {
+    const id = parseInt(req.params.id);
+    const dadosCompletos = await lerDados();
+    let entidades = dadosCompletos[entidade];
 
-        const index = entidades.findIndex(e => e.id === id);
+    const index = entidades.findIndex((e) => e.id === id);
 
-        if (index === -1) {
-            return res.status(404).json({ mensagem: `${nomeEntidade} com ID ${id} não encontrado para remoção.` });
-        }
+    const temEmprestimo = dadosCompletos.emprestimos.some(e => e.membroId === id);
+    if (temEmprestimo) {
+      return res.status(400).json({
+        mensagem: `${nomeEntidade} com ID ${id} não pode ser removido pois está associado a um empréstimo.`,
+      });
+    }
 
-        entidades.splice(index, 1);
-        await escreverDados(dadosCompletos);
+    if (index === -1) {
+      return res
+        .status(404)
+        .json({
+          mensagem: `${nomeEntidade} com ID ${id} não encontrado para remoção.`,
+        });
+    }
 
-        res.status(200).send({ mensagem: nomeEntidade + " removido com sucesso." });
-    });
+    entidades.splice(index, 1);
+    await escreverDados(dadosCompletos);
+
+    res.status(200).send({ mensagem: nomeEntidade + " removido com sucesso." });
+  });
 }
 
 // Empréstimo
@@ -342,7 +379,6 @@ app.post("/emprestimos", async (req, res) => {
     membroId,
   } = req.body || {};
 
-
   if (
     !livroId ||
     !membroId ||
@@ -350,12 +386,10 @@ app.post("/emprestimos", async (req, res) => {
     tempoMinDevolucao === undefined ||
     tempoMaxDevolucao === undefined
   ) {
-    return res
-      .status(400)
-      .json({
-        mensagem:
-          "Todos os campos são obrigatórios (incluindo membroId e livroId).",
-      });
+    return res.status(400).json({
+      mensagem:
+        "Todos os campos são obrigatórios (incluindo membroId e livroId).",
+    });
   }
 
   const dadosCompletos = await lerDados();
@@ -365,6 +399,13 @@ app.post("/emprestimos", async (req, res) => {
   if (!livro) {
     return res.status(404).json({
       mensagem: `Livro com ID ${livroId} não encontrado para associar ao empréstimo.`,
+    });
+  }
+
+  const membro = await encontraMembroPorId(dadosCompletos, parseInt(membroId));
+  if (!membro) {
+    return res.status(404).json({
+      mensagem: `Membro com ID ${membroId} não encontrado para associar ao empréstimo.`,
     });
   }
 
@@ -395,6 +436,7 @@ app.put("/emprestimos/:id", async (req, res) => {
   const dadosCompletos = await lerDados();
   let emprestimos = dadosCompletos.emprestimos;
 
+
   const index = emprestimos.findIndex((e) => e.id === id);
 
   if (index === -1) {
@@ -423,17 +465,17 @@ app.put("/emprestimos/:id", async (req, res) => {
     });
   }
 
-  if (!livroId || !membroId) {
-    return res.status(400).json({
-      mensagem:
-        "Os campos 'livroId' e 'membroId' são obrigatórios para o PUT de empréstimo.",
-    });
-  }
-
   const livro = await encontraLivroPorId(dadosCompletos, parseInt(livroId));
   if (!livro) {
     return res.status(404).json({
       mensagem: `Livro com ID ${livroId} não encontrado para associar ao empréstimo.`,
+    });
+  }
+
+  const membro = await encontraMembroPorId(dadosCompletos, parseInt(membroId));
+  if (!membro) {
+    return res.status(404).json({
+      mensagem: `Membro com ID ${membroId} não encontrado para associar ao empréstimo.`,
     });
   }
 
@@ -468,80 +510,74 @@ app.put("/emprestimos/:id", async (req, res) => {
 });
 
 app.patch("/emprestimos/:id", async (req, res) => {
-  const id = parseInt(req.params.id);
-  const dadosCompletos = await lerDados();
-  let emprestimos = dadosCompletos.emprestimos;
-  const {
-    dataEmprestimo,
-    tempoMinDevolucao,
-    tempoMaxDevolucao,
-    livroId,
-    membroId,
-  } = req.body || {};
+const id = parseInt(req.params.id); 
+const dadosCompletos = await lerDados();
+const emprestimos = dadosCompletos.emprestimos;
+const index = emprestimos.findIndex((e) => e.id === id);
 
-  const index = emprestimos.findIndex((e) => e.id === id);
+if (index === -1) {
+return res.status(404).json({
+ mensagem: `Empréstimo com ID ${id} não encontrado para atualização parcial.`,
+ });
+}
 
-  if (index === -1) {
-    return res.status(404).json({
-      mensagem: `Empréstimo com ID ${id} não encontrado para atualização parcial.`,
-    });
+const emprestimoAtual = emprestimos[index];
+const { dataEmprestimo, tempoMinDevolucao, tempoMaxDevolucao, livroId, membroId } = req.body || {};
+
+const camposFornecidos = [
+   dataEmprestimo,
+   tempoMinDevolucao,
+   tempoMaxDevolucao,
+   livroId,
+   membroId].filter(c => c !== undefined);
+
+if (camposFornecidos.length === 0) {
+return res.status(400).json({ mensagem: "Para o PATCH, pelo menos um campo do empréstimo deve ser fornecido!" });
+}
+
+if (livroId !== undefined) {
+const novoIdLivro = parseInt(livroId);
+
+if (emprestimoAtual.livroId !== novoIdLivro) {
+ 
+ const livroNovo = await encontraLivroPorId(dadosCompletos, novoIdLivro);
+ if (!livroNovo) {
+   return res.status(404).json({ mensagem: `Livro com ID ${novoIdLivro} não encontrado.` });
+ }
+ if (parseInt(livroNovo.qtdDisponivel || 0) <= 0) {
+   return res.status(400).json({ mensagem: `Livro com ID ${novoIdLivro} não tem unidades disponíveis.` }); }
+ }
+
+
+ if (emprestimoAtual.livroId) {
+   await ajustarDisponibilidadeLivro(dadosCompletos, emprestimoAtual.livroId, 1);
+ }
+
+await ajustarDisponibilidadeLivro(dadosCompletos, novoIdLivro, -1);
+emprestimoAtual.livroId = novoIdLivro;
+}
+
+
+if (membroId !== undefined) {
+  const membro = await encontraMembroPorId(dadosCompletos, parseInt(membroId));
+  if (!membro) {
+    return res.status(404).json({ mensagem: `Membro com ID ${membroId} não encontrado.` });
   }
+emprestimoAtual.membroId = parseInt(membroId);
+ }
 
-  if (
-    !dataEmprestimo &&
-    tempoMinDevolucao === undefined &&
-    tempoMaxDevolucao === undefined
-  ) {
-    return res.status(400).json({
-      mensagem:
-        "Para o PATCH, pelo menos um campo do empréstimo deve ser fornecido!",
-    });
-  }
+ if (dataEmprestimo !== undefined) {
+ emprestimoAtual.dataEmprestimo = dataEmprestimo;
+}
+ if (tempoMinDevolucao !== undefined) {
+emprestimoAtual.tempoMinDevolucao = parseInt(tempoMinDevolucao);
+ }
+ if (tempoMaxDevolucao !== undefined) {
+ emprestimoAtual.tempoMaxDevolucao = parseInt(tempoMaxDevolucao);
+ }
 
-  let novoLivro = null;
-  if (livroId !== undefined) {
-    novoLivro = await encontraLivroPorId(dadosCompletos, parseInt(livroId));
-    if (!novoLivro) {
-      return res.status(404).json({
-        mensagem: `Livro com ID ${livroId} não encontrado para associar ao empréstimo.`,
-      });
-    }
-    const emprestimoAtual = emprestimos[index];
-    if (emprestimoAtual.livroId !== parseInt(livroId)) {
-      if (parseInt(novoLivro.qtdDisponivel || 0) <= 0) {
-        return res.status(400).json({
-          mensagem: `Livro com ID ${livroId} não tem unidades disponíveis.`,
-        });
-      }
-      await ajustarDisponibilidadeLivro(
-        dadosCompletos,
-        emprestimoAtual.livroId,
-        1
-      );
-      await ajustarDisponibilidadeLivro(dadosCompletos, parseInt(livroId), -1);
-      emprestimos[index].livroId = parseInt(livroId);
-    }
-  }
-
-  if (membroId !== undefined) {
-    emprestimos[index].membroId = parseInt(membroId);
-  }
-
-  if (dataEmprestimo) {
-    emprestimos[index].dataEmprestimo = dataEmprestimo;
-  }
-
-  if (tempoMinDevolucao) {
-    emprestimos[index].tempoMinDevolucao = parseInt(tempoMinDevolucao);
-  }
-
-  if (tempoMaxDevolucao) {
-    emprestimos[index].tempoMaxDevolucao = parseInt(tempoMaxDevolucao);
-  }
-
-  await escreverDados(dadosCompletos);
-
-  res.status(200).json(emprestimos[index]);
+ await escreverDados(dadosCompletos);
+ res.status(200).json(emprestimoAtual);
 });
 
 app.delete("/emprestimos/:id", async (req, res) => {
@@ -557,8 +593,7 @@ app.delete("/emprestimos/:id", async (req, res) => {
     });
   }
 
-  
-  const livroId = emprestimos[index] && emprestimos[index].livroId;
+  const livroId = emprestimos[index].livroId;
   if (livroId) {
     await ajustarDisponibilidadeLivro(dadosCompletos, livroId, 1);
   }
