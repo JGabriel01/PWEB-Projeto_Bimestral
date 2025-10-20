@@ -2,3 +2,6 @@ O projeto é um Sistema de Gerenciamento de Biblioteca Online (SGBO), construíd
 
 Objetivo Principal do Projeto:
 Criar a estrutura digital para uma biblioteca, permitindo o registro de livros, autores e membros, e o controle das operações de empréstimo e devolução.
+
+Equipe: Luiz Henrique, José Gabriel e Caio Henrique;
+Turma: 922A
