@@ -46,6 +46,32 @@ async function encontraMembroPorId(dadosCompletos, membroId) {
   return membros.find((m) => m.id === membroId);
 }
 
+async function encontraAutorPorId(dadosCompletos, autorId) {
+  const autores = dadosCompletos.autores || [];
+  return autores.find((a) => a.id === autorId);
+}
+
+async function validarAutores(dadosCompletos, autorIds) {
+  if (!Array.isArray(autorIds) || autorIds.length === 0) {
+    return {
+      valido: false,
+      mensagem: "A lista 'autorIds' é obrigatória e não pode estar vazia (deve ser um array).",
+    };
+  }
+
+  const autoresExistentes = dadosCompletos.autores.map((a) => a.id);
+  
+  for (const autorId of autorIds) {
+    if (!autoresExistentes.includes(parseInt(autorId))) {
+      return {
+        valido: false,
+        mensagem: `Autor com ID ${autorId} não encontrado.`,
+      };
+    }
+  }
+  return { valido: true };
+}
+
 app.get("/livros", async (req, res) => {
   const dadosCompletos = await lerDados();
   res.status(200).json(dadosCompletos.livros);
@@ -73,6 +99,12 @@ app.post("/livros", async (req, res) => {
   }
 
   const dadosCompletos = await lerDados();
+
+  const validacao = await validarAutores(dadosCompletos, autorIds);
+  if (!validacao.valido) {
+    return res.status(400).json({ mensagem: validacao.mensagem });
+  }
+
   const livros = dadosCompletos.livros;
 
   const novoLivro = {
@@ -80,6 +112,7 @@ app.post("/livros", async (req, res) => {
     titulo,
     anoPublicacao: parseInt(anoPublicacao),
     qtdDisponivel: parseInt(qtdDisponivel),
+    autorIds: autorIds.map(id => parseInt(id)),
   };
 
   livros.push(novoLivro);
@@ -109,11 +142,17 @@ app.put("/livros/:id", async (req, res) => {
     });
   }
 
+  const validacao = await validarAutores(dadosCompletos, autorIds);
+  if (!validacao.valido) {
+    return res.status(400).json({ mensagem: validacao.mensagem });
+  }
+
   const livroAtualizado = {
     id: id,
     titulo,
     anoPublicacao: parseInt(anoPublicacao),
     qtdDisponivel: parseInt(qtdDisponivel),
+    autorIds: autorIds.map(id => parseInt(id)),
   };
 
   livros[index] = livroAtualizado;
@@ -141,6 +180,14 @@ app.patch("/livros/:id", async (req, res) => {
       mensagem:
         "Para o PATCH, pelo menos um campo do livro deve ser fornecido!",
     });
+  }
+
+  if (autorIds !== undefined) {
+    const validacao = await validarAutores(dadosCompletos, autorIds);
+    if (!validacao.valido) {
+      return res.status(400).json({ mensagem: validacao.mensagem });
+    }
+    livros[index].autorIds = autorIds.map(id => parseInt(id));
   }
 
   if (titulo !== undefined) {
@@ -182,6 +229,127 @@ app.delete("/livros/:id", async (req, res) => {
   await escreverDados(dadosCompletos);
 
   res.status(200).send({ mensagem: "Livro removido com sucesso." });
+});
+
+// Autores
+
+definirObter("/autores", "autores");
+
+definirSelecionarUm("/autores/:id", "autores", "Autor");
+
+app.post("/autores", async (req, res) => {
+  const { nome, dataNascimento, nacionalidade } = req.body || {};
+
+  if (!nome || !dataNascimento || !nacionalidade) {
+    return res
+      .status(400)
+      .json({ mensagem: "Todos os campos são obrigatórios." });
+  }
+
+  const dadosCompletos = await lerDados();
+  const autores = dadosCompletos.autores;
+
+  const novoAutor = {
+    id: Date.now(),
+    nome,
+    dataNascimento,
+    nacionalidade,
+  };
+
+  autores.push(novoAutor);
+  await escreverDados(dadosCompletos);
+
+  res.status(201).json(novoAutor);
+});
+
+app.put("/autores/:id", async (req, res) => {
+  const id = parseInt(req.params.id);
+  const dadosCompletos = await lerDados();
+  let autores = dadosCompletos.autores;
+  const index = autores.findIndex((a) => a.id === id);
+
+  if (index === -1) {
+    return res
+      .status(404)
+      .json({ mensagem: `Autor com ID ${id} não encontrado para atualização.` });
+  }
+
+  const { nome, dataNascimento, nacionalidade } = req.body || {};
+
+  if (!nome || !dataNascimento || !nacionalidade) {
+    return res
+      .status(400)
+      .json({ mensagem: "Para o PUT, todos os campos do autor são obrigatórios!" });
+  }
+
+  const autorAtualizado = {
+    id: id,
+    nome,
+    dataNascimento,
+    nacionalidade,
+  };
+
+  autores[index] = autorAtualizado;
+  await escreverDados(dadosCompletos);
+
+  res.status(200).json(autorAtualizado);
+});
+
+app.patch("/autores/:id", async (req, res) => {
+  const id = parseInt(req.params.id);
+  const dadosCompletos = await lerDados();
+  let autores = dadosCompletos.autores;
+  const { nome, dataNascimento, nacionalidade } = req.body || {};
+  const index = autores.findIndex((a) => a.id === id);
+
+  if (index === -1) {
+    return res
+      .status(404)
+      .json({ mensagem: `Autor com ID ${id} não encontrado para atualização parcial.` });
+  }
+
+  if (!nome && !dataNascimento && !nacionalidade) {
+    return res
+      .status(400)
+      .json({ mensagem: "Para o PATCH, pelo menos um campo do autor deve ser fornecido!" });
+  }
+
+  if (nome !== undefined) autores[index].nome = nome;
+  if (dataNascimento !== undefined) autores[index].dataNascimento = dataNascimento;
+  if (nacionalidade !== undefined) autores[index].nacionalidade = nacionalidade;
+  
+  await escreverDados(dadosCompletos);
+  res.status(200).json(autores[index]);
+});
+
+app.delete("/autores/:id", async (req, res) => {
+  const id = parseInt(req.params.id);
+  const dadosCompletos = await lerDados();
+  let autores = dadosCompletos.autores;
+  const index = autores.findIndex((a) => a.id === id);
+
+  if (index === -1) {
+    return res
+      .status(404)
+      .json({ mensagem: `Autor com ID ${id} não encontrado para remoção.` });
+  }
+
+  // NOVO: VERIFICAÇÃO DE INTEGRIDADE
+  // Checa se algum livro está associado a este autor
+  const temLivro = dadosCompletos.livros.some(livro => 
+    livro.autorIds && livro.autorIds.includes(id)
+  );
+
+  if (temLivro) {
+    return res.status(400).json({
+      mensagem: `Autor com ID ${id} não pode ser removido pois está associado a um livro.`,
+    });
+  }
+  
+  autores.splice(index, 1);
+  await escreverDados(dadosCompletos);
+
+  res.status(200).send({ mensagem: "Autor removido com sucesso." });
 });
 
 // Membro
@@ -327,6 +495,31 @@ function definirDelete(rota, entidade, nomeEntidade) {
 
     const index = entidades.findIndex((e) => e.id === id);
 
+    if (entidade === "membros") {
+        const temEmprestimo01 = dadosCompletos.emprestimos.some(e => e.membroId === id);
+        if (temEmprestimo01) {
+        return res.status(400).json({
+            mensagem: `${nomeEntidade} com ID ${id} não pode ser removido pois está associado a um empréstimo.`,
+        });
+        }
+    }
+
+
+    if (index === -1) {
+      return res
+        .status(404)
+        .json({
+          mensagem: `${nomeEntidade} com ID ${id} não encontrado para remoção.`,
+        });
+    }
+
+    entidades.splice(index, 1);
+    await escreverDados(dadosCompletos);
+
+    res.status(200).send({ mensagem: nomeEntidade + " removido com sucesso." });
+  });
+}
+
     const temEmprestimo01 = dadosCompletos.emprestimos.some(e => e.membroId === id);
     if (temEmprestimo01) {
       return res.status(400).json({
@@ -346,8 +539,7 @@ function definirDelete(rota, entidade, nomeEntidade) {
     await escreverDados(dadosCompletos);
 
     res.status(200).send({ mensagem: nomeEntidade + " removido com sucesso." });
-  });
-}
+
 
 // Empréstimo
 
