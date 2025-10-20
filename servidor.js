@@ -90,7 +90,7 @@ app.get("/livros/:id", async (req, res) => {
 });
 
 app.post("/livros", async (req, res) => {
-  const { titulo, anoPublicacao, qtdDisponivel } = req.body || {};
+  const { titulo, anoPublicacao, qtdDisponivel, autorIds } = req.body || {};
 
   if (!titulo || !anoPublicacao || qtdDisponivel === undefined) {
     return res
@@ -134,7 +134,7 @@ app.put("/livros/:id", async (req, res) => {
     });
   }
 
-  const { titulo, anoPublicacao, qtdDisponivel } = req.body || {};
+  const { titulo, anoPublicacao, qtdDisponivel, autorIds} = req.body || {};
 
   if (!titulo || !anoPublicacao || qtdDisponivel === undefined) {
     return res.status(400).json({
@@ -165,7 +165,7 @@ app.patch("/livros/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const dadosCompletos = await lerDados();
   let livros = dadosCompletos.livros;
-  const { titulo, anoPublicacao, qtdDisponivel } = req.body || {};
+  const { titulo, anoPublicacao, qtdDisponivel, autorIds} = req.body || {};
 
   const index = livros.findIndex((l) => l.id === id);
 
@@ -519,27 +519,6 @@ function definirDelete(rota, entidade, nomeEntidade) {
     res.status(200).send({ mensagem: nomeEntidade + " removido com sucesso." });
   });
 }
-
-    const temEmprestimo01 = dadosCompletos.emprestimos.some(e => e.membroId === id);
-    if (temEmprestimo01) {
-      return res.status(400).json({
-        mensagem: `${nomeEntidade} com ID ${id} não pode ser removido pois está associado a um empréstimo.`,
-      });
-    }
-
-    if (index === -1) {
-      return res
-        .status(404)
-        .json({
-          mensagem: `${nomeEntidade} com ID ${id} não encontrado para remoção.`,
-        });
-    }
-
-    entidades.splice(index, 1);
-    await escreverDados(dadosCompletos);
-
-    res.status(200).send({ mensagem: nomeEntidade + " removido com sucesso." });
-
 
 // Empréstimo
 
