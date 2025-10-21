@@ -652,7 +652,7 @@ app.put("/emprestimos/:id", async (req, res) => {
 
   const emprestimoAtualizado = {
     id: id,
-    dataEmprestimo,
+    dataEmprestimo: dataEmprestimo,
     tempoMinDevolucao: parseInt(tempoMinDevolucao),
     tempoMaxDevolucao: parseInt(tempoMaxDevolucao),
     livroId: parseInt(livroId),
