@@ -1,3 +1,4 @@
+-- Active: 1765790523063@@127.0.0.1@3307@banco
 -- Tabela para Autores
 CREATE TABLE autores (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -11,8 +12,7 @@ CREATE TABLE livros (
     id INT AUTO_INCREMENT PRIMARY KEY,
     titulo VARCHAR(255) NOT NULL,
     anoPublicacao INT,
-    qtdDisponivel INT,
-    FOREIGN KEY (autorId) REFERENCES autores(id)
+    qtdDisponivel INT
 );
 
 -- Tabela PIVÔ (Ligação N:N)
