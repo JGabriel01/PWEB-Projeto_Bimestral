@@ -72,6 +72,52 @@ exports.updateAutor = async (req, res) => {
     }
 };
 
+// @PATCH /api/autores/:id
+exports.patchAutor = async (req, res) => {
+    const { id } = req.params;
+    const updates = req.body; // Pega todos os campos enviados
+
+    // Se nenhum campo foi enviado, retorna erro 400
+    if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ message: 'Nenhum campo fornecido para atualização.' });
+    }
+
+    try {
+        // 1. Constrói a query de forma dinâmica
+        const fields = [];
+        const values = [];
+
+        // Itera sobre os campos no body da requisição
+        for (const key in updates) {
+            if (updates.hasOwnProperty(key)) {
+                // Adiciona o campo e um placeholder '?'
+                fields.push(`${key} = ?`);
+                // Adiciona o valor correspondente
+                values.push(updates[key]);
+            }
+        }
+
+        // Adiciona o ID do autor ao final dos valores
+        values.push(id); 
+
+        const query = `UPDATE autores SET ${fields.join(', ')} WHERE id = ?`;
+
+        const [result] = await pool.query(query, values);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Autor não encontrado para atualização parcial.' });
+        }
+        
+        // 2. Opcional: Retorna o autor atualizado
+        const [rows] = await pool.query('SELECT * FROM autores WHERE id = ?', [id]);
+        res.status(200).json(rows[0]);
+
+    } catch (error) {
+        console.error(`Erro ao atualizar parcialmente o autor ID ${id}:`, error);
+        res.status(500).json({ message: 'Erro interno do servidor ao atualizar parcialmente o autor.' });
+    }
+};
+
 // @DELETE /api/autores/:id
 exports.deleteAutor = async (req, res) => {
     const { id } = req.params;

@@ -12,8 +12,16 @@ CREATE TABLE livros (
     titulo VARCHAR(255) NOT NULL,
     anoPublicacao INT,
     qtdDisponivel INT,
-    autorId INT NOT NULL,
     FOREIGN KEY (autorId) REFERENCES autores(id)
+);
+
+-- Tabela PIVÔ (Ligação N:N)
+CREATE TABLE livro_autor (
+    livro_id INT NOT NULL,
+    autor_id INT NOT NULL,
+    PRIMARY KEY (livro_id, autor_id),
+    FOREIGN KEY (livro_id) REFERENCES livros(id) ON DELETE CASCADE,
+    FOREIGN KEY (autor_id) REFERENCES autores(id) ON DELETE CASCADE
 );
 
 -- Tabela para Membros
