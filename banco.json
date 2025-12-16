@@ -1,0 +1,91 @@
+{
+  "livros": [
+    {
+      "id": 1700000000000,
+      "titulo": "O Senhor dos Anéis: A Sociedade do Anel",
+      "anoPublicacao": 1989,
+      "qtdDisponivel": 5,
+      "autorIds": [1690000000000]
+    },
+    {
+      "id": 1700000000001,
+      "titulo": "Harry Potter e a Pedra Filosofal",
+      "anoPublicacao": 2017,
+      "qtdDisponivel": 4,
+      "autorIds": [1690000000001]
+    },
+    {
+      "id": 1700000000002,
+      "titulo": "Star Wars: Troopers da Morte",
+      "anoPublicacao": 2015,
+      "qtdDisponivel": 10,
+      "autorIds": [1690000000002]
+    }
+  ],
+  "autores": [
+    {
+      "id": 1690000000000,
+      "nome": "J. R. R. Tolkien",
+      "dataNascimento": "1982",
+      "nacionalidade": "África do Sul"
+    },
+    {
+      "id": 1690000000001,
+      "nome": "J. K. Rowling",
+      "dataNascimento": "1965",
+      "nacionalidade": "Reino Unido"
+    },
+    {
+      "id": 1690000000002,
+      "nome": "Joe Schreiber",
+      "dataNascimento": "1969",
+      "nacionalidade": "Estados Unidos"
+    }
+  ],
+  "membros": [
+    {
+      "id": 1660000000000,
+      "nome": "Ana Silva",
+      "email": "ana.silva@gmail.com",
+      "endereco": "Rua das Flores, 123, São Paulo, SP"
+    },
+    {
+      "id": 1660000000001,
+      "nome": "Bruno Souza",
+      "email": "bruno.souza@gmail.com",
+      "endereco": "Avenida Paulista, 456, São Paulo, SP"
+    },
+    {
+      "id": 1660000000002,
+      "nome": "Carla Mendes",
+      "email": "carla.mendes@gmail.com",
+      "endereco": "Rua das Acácias, 789, São Paulo, SP"
+    }
+  ],
+  "emprestimos": [
+    {
+      "id": 1680000000000,
+      "dataEmprestimo": "20/10/2025",
+      "tempoMinDevolucao": 7,
+      "tempoMaxDevolucao": 30,
+      "livroId": 1700000000000,
+      "membroId": 1660000000000
+    },
+    {
+      "id": 1680000000001,
+      "dataEmprestimo": "20/10/2025",
+      "tempoMinDevolucao": 7,
+      "tempoMaxDevolucao": 30,
+      "livroId": 1700000000001,
+      "membroId": 1660000000001
+    },
+    {
+      "id": 1680000000002,
+      "dataEmprestimo": "22/10/2025",
+      "tempoMinDevolucao": 7,
+      "tempoMaxDevolucao": 30,
+      "livroId": 1700000000002,
+      "membroId": 1660000000002
+    }
+  ]
+}

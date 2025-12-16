@@ -5,6 +5,6 @@ const Emprestimo = sequelize.define('Emprestimo', {
   dataEmprestimo: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
   tempoMinDevolucao: { type: DataTypes.INTEGER },
   tempoMaxDevolucao: { type: DataTypes.INTEGER }
-});
+}, { freezeTableName: true });
 
 module.exports = Emprestimo;
