@@ -1,4 +1,4 @@
--- Active: 1765790523063@@127.0.0.1@3307@banco
+-- Active: 1765846432465@@127.0.0.1@3307@banco
 -- Tabela para Autores
 CREATE TABLE autores (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -29,20 +29,22 @@ CREATE TABLE membros (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
-    endereco TEXT NOT NULL
+    endereco TEXT 
 );
 
 -- Tabela para Empréstimos
+
 CREATE TABLE emprestimos (
     id INT AUTO_INCREMENT PRIMARY KEY,
-
-    dataEmprestimo DATE NOT NULL,
-    tempoMinDevolucao INT NOT NULL,
-    tempoMaxDevolucao INT NOT NULL,
-
+    -- Chaves Estrangeiras para as relações: Um Empréstimo está associado a um Livro e um Membro
     livroId INT NOT NULL,
     membroId INT NOT NULL,
-
-    FOREIGN KEY (livroId) REFERENCES livros(id),
-    FOREIGN KEY (membroId) REFERENCES membros(id)
+    -- Data do Empréstimo
+    dataEmprestimo DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    -- Atributos de Tempo (Apenas informativos, sem lógica de validação no backend)
+    tempoMinDevolucao INT NULL, -- Ex: 7 (dias)
+    tempoMaxDevolucao INT NULL, -- Ex: 14 (dias)
+    -- Relações de Integridade (Foreign Keys)
+    FOREIGN KEY (livroId) REFERENCES livros(id) ON DELETE CASCADE,
+    FOREIGN KEY (membroId) REFERENCES membros(id) ON DELETE CASCADE
 );

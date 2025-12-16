@@ -4,6 +4,8 @@ require('dotenv').config();
 const express = require('express');
 const autorRoutes = require('./src/routes/autorRoutes');
 const livroRoutes = require('./src/routes/livroRoutes');
+const membroRoutes = require('./src/routes/membroRoutes');
+const emprestimoRoutes = require('./src/routes/emprestimosRoutes');
 
 const app = express();
 // A porta do servidor será lida do .env, ou usará 3000 como fallback
@@ -15,6 +17,8 @@ app.use(express.json());
 // Rotas da API
 app.use('/api/autores', autorRoutes);
 app.use('/api/livros', livroRoutes);
+app.use('/api/membros', membroRoutes);
+app.use('/api/emprestimos', emprestimoRoutes);
 
 // Rota de teste
 app.get('/', (req, res) => {
