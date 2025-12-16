@@ -1,31 +1,41 @@
-// Carrega as variáveis de ambiente do arquivo .env
-require('dotenv').config();
-
 const express = require('express');
-const autorRoutes = require('./src/routes/autorRoutes');
-const livroRoutes = require('./src/routes/livroRoutes');
-const membroRoutes = require('./src/routes/membroRoutes');
-const emprestimoRoutes = require('./src/routes/emprestimosRoutes');
+const sequelize = require('./database/db');
+
+// Importar Modelos para Associações
+const Autor = require('./models/autor');
+const Livro = require('./models/livros');
+const Membro = require('./models/membros');
+const Emprestimo = require('./models/emprestimos');
+
+// Importar Rotas
+const autorRoutes = require('./routes/autorRoutes');
+const livroRoutes = require('./routes/livroRoutes');
+const membroRoutes = require('./routes/membroRoutes');
+const emprestimoRoutes = require('./routes/emprestimoRoutes');
 
 const app = express();
-// A porta do servidor será lida do .env, ou usará 3000 como fallback
-const PORT = process.env.PORT || 3000;
-
-// Middleware para parsear o body de requisições JSON
 app.use(express.json());
 
-// Rotas da API
-app.use('/api/autores', autorRoutes);
-app.use('/api/livros', livroRoutes);
-app.use('/api/membros', membroRoutes);
-app.use('/api/emprestimos', emprestimoRoutes);
+// CONFIGURAR RELACIONAMENTOS
+Autor.belongsToMany(Livro, { through: 'LivroAutores' });
+Livro.belongsToMany(Autor, { through: 'LivroAutores' });
+Livro.hasMany(Emprestimo, { foreignKey: 'livroId' });
+Emprestimo.belongsTo(Livro, { foreignKey: 'livroId' });
+Membro.hasMany(Emprestimo, { foreignKey: 'membroId' });
+Emprestimo.belongsTo(Membro, { foreignKey: 'membroId' });
 
-// Rota de teste
-app.get('/', (req, res) => {
-    res.send('API de Biblioteca rodando!');
-});
+// USAR ROTAS
+app.use(autorRoutes);
+app.use(livroRoutes);
+app.use(membroRoutes);
+app.use(emprestimoRoutes);
 
-// Inicia o servidor
-app.listen(PORT, () => {
-    console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
-});
+(async () => {
+  try {
+    await sequelize.authenticate();
+    await sequelize.sync({ alter: true });
+    app.listen(3000, () => console.log("Servidor rodando em http://localhost:3000"));
+  } catch (error) {
+    console.error("Erro ao iniciar:", error);
+  }
+})();
