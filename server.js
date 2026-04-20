@@ -1,5 +1,8 @@
+require('dotenv').config();
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const sequelize = require('./database/db');
+const { autenticar } = require('./middleware/autenticacao');
 
 // --- IMPORTAÇÃO DOS MODELOS ---
 const Autor = require('./models/Autor');
@@ -17,6 +20,29 @@ const app = express();
 
 // Middleware para JSON
 app.use(express.json());
+
+// --- ROTA DE AUTENTICAÇÃO (PÚBLICA) ---
+// POST /login - Rota para gerar token JWT
+app.post('/login', (req, res) => {
+    const { usuario, senha } = req.body;
+
+    // Validação básica
+    if (!usuario || !senha) {
+        return res.status(400).json({ erro: 'Usuário e senha são obrigatórios' });
+    }
+
+    // Validação simples (em produção, verificar no banco de dados)
+    if (usuario === 'admin' && senha === 'admin123') {
+        const token = jwt.sign(
+            { usuario: usuario, iat: Math.floor(Date.now() / 1000) },
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRES_IN }
+        );
+        res.json({ token });
+    } else {
+        res.status(401).json({ erro: 'Credenciais inválidas' });
+    }
+});
 
 // --- CONFIGURAÇÃO DOS RELACIONAMENTOS (MODELO ER) ---
 
@@ -66,7 +92,7 @@ app.use(membroRoutes);
 app.use(emprestimoRoutes);
 
 // --- INICIALIZAÇÃO DO SERVIDOR ---
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 (async () => {
     try {

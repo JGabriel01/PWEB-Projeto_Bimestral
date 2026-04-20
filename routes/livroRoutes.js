@@ -1,6 +1,7 @@
 const express = require('express');
 const Livro = require('../models/Livro');
 const Autor = require('../models/Autor');
+const { autenticar } = require('../middleware/autenticacao');
 const router = express.Router();
 
 router.get('/livros', async (req, res) => res.json(await Livro.findAll({ include: 'autores' })));
@@ -11,7 +12,7 @@ router.get('/livros/:id', async (req, res) => {
 });
 
 // POST - Criar Livro
-router.post('/livros', async (req, res) => {
+router.post('/livros', autenticar, async (req, res) => {
     try {
         const { titulo, anoPublicacao, qtdDisponivel, autorIds } = req.body;
         
@@ -33,7 +34,7 @@ router.post('/livros', async (req, res) => {
 });
 
 // PUT - Atualização Total
-router.put('/livros/:id', async (req, res) => {
+router.put('/livros/:id', autenticar, async (req, res) => {
     try {
         const { titulo, anoPublicacao, qtdDisponivel, autorIds } = req.body;
         const livro = await Livro.findByPk(req.params.id);
@@ -55,7 +56,7 @@ router.put('/livros/:id', async (req, res) => {
 });
 
 // PATCH - Atualização Parcial
-router.patch('/livros/:id', async (req, res) => {
+router.patch('/livros/:id', autenticar, async (req, res) => {
     try {
         const livro = await Livro.findByPk(req.params.id);
         if (!livro) return res.status(404).json({ erro: "Livro não encontrado" });
@@ -77,7 +78,7 @@ router.patch('/livros/:id', async (req, res) => {
     } catch (e) { res.status(400).json({ erro: e.message }); }
 });
 
-router.delete('/livros/:id', async (req, res) => {
+router.delete('/livros/:id', autenticar, async (req, res) => {
     try {
         const deletado = await Livro.destroy({ where: { id: req.params.id } });
         deletado ? res.status(204).send() : res.status(404).json({ erro: "Livro não encontrado" });

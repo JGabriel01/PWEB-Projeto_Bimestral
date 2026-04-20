@@ -1,5 +1,6 @@
 const express = require('express');
 const Autor = require('../models/Autor');
+const { autenticar } = require('../middleware/autenticacao');
 const router = express.Router();
 
 router.get('/autores', async (req, res) => res.json(await Autor.findAll()));
@@ -9,12 +10,12 @@ router.get('/autores/:id', async (req, res) => {
     autor ? res.json(autor) : res.status(404).json({ erro: "Autor não encontrado" });
 });
 
-router.post('/autores', async (req, res) => {
+router.post('/autores', autenticar, async (req, res) => {
     try { res.status(201).json(await Autor.create(req.body)); } 
     catch (e) { res.status(400).json({ erro: e.message }); }
 });
 
-router.put('/autores/:id', async (req, res) => {
+router.put('/autores/:id', autenticar, async (req, res) => {
     try {
         const { nome, dataNascimento, nacionalidade } = req.body;
         const autor = await Autor.findByPk(req.params.id);
@@ -24,7 +25,7 @@ router.put('/autores/:id', async (req, res) => {
     } catch (e) { res.status(400).json({ erro: e.message }); }
 });
 
-router.patch('/autores/:id', async (req, res) => {
+router.patch('/autores/:id', autenticar, async (req, res) => {
     try {
         const autor = await Autor.findByPk(req.params.id);
         if (!autor) return res.status(404).json({ erro: "Não encontrado" });
@@ -33,7 +34,7 @@ router.patch('/autores/:id', async (req, res) => {
     } catch (e) { res.status(400).json({ erro: e.message }); }
 });
 
-router.delete('/autores/:id', async (req, res) => {
+router.delete('/autores/:id', autenticar, async (req, res) => {
     try {
         const deletado = await Autor.destroy({ where: { id: req.params.id } });
         deletado ? res.status(204).send() : res.status(404).json({ erro: "Não encontrado" });
