@@ -1,8 +1,9 @@
 const express = require('express');
-const router = express.Router();
 const Emprestimo = require('../models/Emprestimo');
 const Livro = require('../models/Livro');
 const Membro = require('../models/Membro');
+const { autenticar } = require('../middleware/autenticacao');
+const router = express.Router();
 const sequelize = require('../database/db');
 
 // GET ALL
@@ -17,7 +18,7 @@ router.get('/emprestimos/:id', async (req, res) => {
 });
 
 // POST - Criar com validação de existência e estoque
-router.post('/emprestimos', async (req, res) => {
+router.post('/emprestimos', autenticar, async (req, res) => {
     const t = await sequelize.transaction();
     try {
         const { livroId, membroId } = req.body;
@@ -38,7 +39,7 @@ router.post('/emprestimos', async (req, res) => {
 });
 
 // PUT - Atualização Total (Exige todos os campos e valida IDs)
-router.put('/emprestimos/:id', async (req, res) => {
+router.put('/emprestimos/:id', autenticar, async (req, res) => {
     try {
         const { livroId, membroId, tempoMinDevolucao, tempoMaxDevolucao } = req.body;
         const emp = await Emprestimo.findByPk(req.params.id);
@@ -57,7 +58,7 @@ router.put('/emprestimos/:id', async (req, res) => {
 });
 
 // PATCH - Atualização Parcial (Valida IDs apenas se forem enviados)
-router.patch('/emprestimos/:id', async (req, res) => {
+router.patch('/emprestimos/:id', autenticar, async (req, res) => {
     try {
         const emp = await Emprestimo.findByPk(req.params.id);
         if (!emp) return res.status(404).json({ erro: "Empréstimo não encontrado" });
@@ -80,7 +81,7 @@ router.patch('/emprestimos/:id', async (req, res) => {
 });
 
 // DELETE - Devolução
-router.delete('/emprestimos/:id', async (req, res) => {
+router.delete('/emprestimos/:id', autenticar, async (req, res) => {
     const t = await sequelize.transaction();
     try {
         const emp = await Emprestimo.findByPk(req.params.id);
