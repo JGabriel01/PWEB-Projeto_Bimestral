@@ -1,6 +1,6 @@
 const express = require('express');
 const Membro = require('../models/Membro');
-const { autenticar } = require('../middleware/autenticacao');
+const { autenticar, autenticarAdmin } = require('../middleware/autenticacao');
 const router = express.Router();
 
 router.get('/membros', async (req, res) => res.json(await Membro.findAll()));
@@ -10,12 +10,12 @@ router.get('/membros/:id', async (req, res) => {
     membro ? res.json(membro) : res.status(404).json({ erro: "Membro não encontrado" });
 });
 
-router.post('/membros', autenticar, async (req, res) => {
+router.post('/membros', async (req, res) => {
     try { res.status(201).json(await Membro.create(req.body)); }
     catch (e) { res.status(400).json({ erro: e.message }); }
 });
 
-router.put('/membros/:id', autenticar ,async (req, res) => {
+router.put('/membros/:id', autenticarAdmin ,async (req, res) => {
     try {
         const { nome, email, senha, endereco } = req.body;
         const membro = await Membro.findByPk(req.params.id);
@@ -25,7 +25,7 @@ router.put('/membros/:id', autenticar ,async (req, res) => {
     } catch (e) { res.status(400).json({ erro: e.message }); }
 });
 
-router.patch('/membros/:id', autenticar, async (req, res) => {
+router.patch('/membros/:id', autenticarAdmin, async (req, res) => {
     try {
         const membro = await Membro.findByPk(req.params.id);
         if (!membro) return res.status(404).json({ erro: "Não encontrado" });
@@ -34,7 +34,7 @@ router.patch('/membros/:id', autenticar, async (req, res) => {
     } catch (e) { res.status(400).json({ erro: e.message }); }
 });
 
-router.delete('/membros/:id', autenticar, async (req, res) => {
+router.delete('/membros/:id', autenticarAdmin, async (req, res) => {
     try {
         const deletado = await Membro.destroy({ where: { id: req.params.id } });
         deletado ? res.status(204).send() : res.status(404).json({ erro: "Não encontrado" });

@@ -6,7 +6,8 @@ const Membro = sequelize.define('Membro', {
   nome: { type: DataTypes.STRING, allowNull: false },
   email: { type: DataTypes.STRING, allowNull: false, unique: true },
   senha: { type: DataTypes.STRING, allowNull: false },
-  endereco: { type: DataTypes.STRING }
+  endereco: { type: DataTypes.STRING },
+  role: { type: DataTypes.ENUM('user', 'admin'), defaultValue: 'user' }
 }, { 
   freezeTableName: true,
   hooks: {
